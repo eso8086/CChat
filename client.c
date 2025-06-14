@@ -4,16 +4,29 @@
 #include <poll.h>
 #include <unistd.h>
 
+#define PORT 9999
+#define LOG_ERR perror("Error happened: ")
+
+
 int main()
 {
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd == -1)
+    {
+        LOG_ERR;
+    }
 
-    struct sockaddr_in addr = {
+    const struct sockaddr_in addr = {
         AF_INET,
-        htons(9999),
+        htons(PORT),
         0
     };
-    connect(sockfd, &addr, sizeof(addr));
+
+    if (connect(sockfd, &addr, sizeof(addr)) == -1)
+    {
+        LOG_ERR;
+        close(sockfd);
+    }
 
     struct pollfd fds[2] = {
         {
@@ -31,23 +44,25 @@ int main()
     while (1)
     {
         char buffer[256] = {0};
-        poll(fds, 2, 5000);
+        if (poll(fds, 2, 5000) == -1)
+        {
+            LOG_ERR;
+        }
+
 
         if (fds[0].revents & POLLIN)
         {
-            read(0, buffer, 255);
-            send(sockfd, buffer, 255, 0);
+            read(0, buffer, 256);
+            send(sockfd, buffer, 256, 0);
         }
         else if (fds[1].revents & POLLIN)
         {
-            if (recv(sockfd, buffer, 255, 0) == 0)
+            if (recv(sockfd, buffer, 256, 0) == -1)
             {
-                return 0;
+                LOG_ERR;
+                close(sockfd);
             }
-            printf("%s\n", buffer);
+            printf(buffer);
         }
     }
-
-    return 0;
-
 }
