@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.31)
-project(Chat C)
+project(CChat C)
 
 set(CMAKE_C_STANDARD 11)
 
